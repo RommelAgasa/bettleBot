@@ -1,11 +1,11 @@
-import { View, Text, TouchableOpacity } from "react-native";
 import { Link } from "expo-router";
-import style from "./screen-style"
+import { Text, TouchableOpacity, View } from "react-native";
+import style from "./screen-style";
 
 export default function WelcomeScreen() {
   return (
     <View style={style.container}>
-      <Text style={style.title}>Welcome to BettleBot!</Text>
+      <Text style={style.title}>Welcome to BeetleBot!</Text>
 
       <Text style={style.subtitle}>
         A new era of intelligent automation begins.
