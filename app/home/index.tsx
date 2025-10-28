@@ -1,5 +1,6 @@
 import CustomText from "@/src/theme/customText";
 import { Text, View } from "react-native";
+import Bluetooth from "./components/bluetooth";
 import style from "./screen-style";
 export default function Home(){
     return (
@@ -17,7 +18,7 @@ export default function Home(){
                             <Text>Bluetooth</Text>
                         </View>
                         <View style={style.center}>
-                            <Text>Settings</Text>
+                            <Bluetooth/>
                         </View>
                     </View>
 

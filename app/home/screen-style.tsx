@@ -48,8 +48,6 @@ export default StyleSheet.create({
   center: {
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1,
-    padding: 20,
   },
 
   // ==============================
