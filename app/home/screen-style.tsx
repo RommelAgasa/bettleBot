@@ -100,18 +100,17 @@ export default StyleSheet.create({
 
   // ----- Claw panel
   claw: {
-    flex: 1, // takes up equal height as accel/break section
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
     padding: 20,
+    height: "40%",
   },
 
   // ----- Acceleration + Break (side-by-side)
   row2_right_accelaration_break_container: {
     flex: 1,
     flexDirection: "row",
-    borderWidth: 1,
   },
 
   acceleration: {
@@ -124,7 +123,7 @@ export default StyleSheet.create({
 
   break: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "flex-end",
     alignItems: "center",
     borderWidth: 1,
     padding: 20,
