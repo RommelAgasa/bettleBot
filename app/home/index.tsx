@@ -1,6 +1,8 @@
 import CustomText from "@/src/theme/customText";
 import { Text, View } from "react-native";
+import AccelaratorButton from "./components/acceleration";
 import Bluetooth from "./components/bluetooth";
+import BreakButton from "./components/break";
 import Settings from "./components/settings";
 import style from "./screen-style";
 export default function Home(){
@@ -38,11 +40,13 @@ export default function Home(){
                                 <Text>Claw</Text>
                             </View>
                             <View style={style.row2_right_accelaration_break_container}>
-                                <View style={style.acceleration}>
-                                    <Text>Acceleration</Text>
-                                </View>
                                 <View style={style.break}>
-                                    <Text>Break</Text>
+                                    <View style={{ display: "flex", justifyContent: "flex-end", alignItems: "center"}}>
+                                        <BreakButton/>
+                                    </View>
+                                </View>
+                                <View style={style.acceleration}>
+                                    <AccelaratorButton/>
                                 </View>
                             </View>
                         </View>
