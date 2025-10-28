@@ -1,21 +1,26 @@
-import { Link } from "expo-router";
-import { Text, TouchableOpacity, View } from "react-native";
+import CustomText from "@/src/theme/customText";
+import { useRouter } from "expo-router";
+import { useEffect } from "react";
+import { View } from "react-native";
 import style from "./screen-style";
 
 export default function WelcomeScreen() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      router.replace("/home");
+    }, 3000);
+
+    return () => clearTimeout(timer); // cleanup on unmount
+  }, [router]);
+
   return (
     <View style={style.container}>
-      <Text style={style.title}>Welcome to BeetleBot!</Text>
-
-      <Text style={style.subtitle}>
-        A new era of intelligent automation begins.
-      </Text>
-
-      <Link href="/home" asChild>
-        <TouchableOpacity style={style.button}>
-          <Text style={style.buttonText}>Get Started</Text>
-        </TouchableOpacity>
-      </Link>
+      <View style={style.title_container}>
+        <CustomText style={style.title_Beetle}>Beetle</CustomText>
+        <CustomText style={style.title_bot}>bot</CustomText>
+      </View>
     </View>
   );
 }

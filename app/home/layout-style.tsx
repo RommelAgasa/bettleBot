@@ -7,4 +7,5 @@ export default StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
   },
+  
 });
