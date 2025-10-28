@@ -1,5 +1,7 @@
 import CustomText from "@/src/theme/customText";
 import { Text, View } from "react-native";
+import Bluetooth from "./components/bluetooth";
+import Settings from "./components/settings";
 import style from "./screen-style";
 export default function Home(){
     return (
@@ -14,10 +16,10 @@ export default function Home(){
 
                     <View style={style.bluetooth_setting_container}>
                         <View style={style.center}>
-                            <Text>Bluetooth</Text>
+                            <Bluetooth/>
                         </View>
                         <View style={style.center}>
-                            <Text>Settings</Text>
+                            <Settings/>
                         </View>
                     </View>
 

@@ -10,7 +10,7 @@ export default function CustomText({ style, children, ...props }: CustomTextProp
   return (
     <Text
       {...props}
-      style={[{ fontFamily: "InstrumentSans_400Regular" }, style]}
+      style={[{ fontFamily: "InstrumentSans_400Regular", color: "#999999"}, style]}
     >
       {children}
     </Text>

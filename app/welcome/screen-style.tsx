@@ -19,7 +19,6 @@ export default StyleSheet.create({
     marginRight: 0,
   },
   title_bot: {
-    color: "#999999",
     fontSize: 30,
     fontWeight: 500,
     marginBottom: 10,
