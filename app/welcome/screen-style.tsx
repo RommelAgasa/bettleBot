@@ -6,11 +6,24 @@ export default StyleSheet.create({
     alignItems: "center",
     width: "100%",
   },
-  title: {
-    color: "#eb950aff",
-    fontSize: 28,
-    fontWeight: "bold",
+  title_container: {
+    display: "flex",
+    flexDirection: "row",
+    gap:2
+  },
+  title_Beetle: {
+    color: "#FF9E42",
+    fontSize: 30,
+    fontWeight: 500,
     marginBottom: 10,
+    marginRight: 0,
+  },
+  title_bot: {
+    color: "#999999",
+    fontSize: 30,
+    fontWeight: 500,
+    marginBottom: 10,
+    marginLeft: 0,
   },
   subtitle: {
     color: "#ccc",
