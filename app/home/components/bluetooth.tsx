@@ -1,3 +1,4 @@
+import CustomText from "@/src/theme/customText";
 import { FontAwesome } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -6,8 +7,13 @@ export default function Bluetooth() {
   return (
     <Link href="/" asChild>
       <Pressable style={styles.iconWrapper}>
-        <View style={styles.circle}>
-          <FontAwesome name="gear" size={40} color="#FF9E42" />
+        <View style={styles.round_rectangle}>
+            <View>
+                <FontAwesome name="bluetooth" size={30} color="#FF9E42" />
+            </View>
+            <View>
+                <CustomText style={{ marginRight: 10}}>Connect</CustomText>
+            </View>
         </View>
       </Pressable>
     </Link>
@@ -16,13 +22,17 @@ export default function Bluetooth() {
 
 const styles = StyleSheet.create({
   iconWrapper: {
-    padding: 10,
-    alignSelf: "flex-end",
+    padding: 7,
+    display: "flex",
   },
-  circle: {
+  round_rectangle: {
+    display: "flex",
+    flexDirection: "row",
+    gap: 10,
     backgroundColor: "white",
-    borderRadius: 50,
-    width: 60,
+    borderRadius: 40,
+    padding: 10,
+    width: 150,
     height: 60,
     justifyContent: "center",
     alignItems: "center",

@@ -26,6 +26,8 @@ export default StyleSheet.create({
     flexDirection: "row",
     padding: 20,
     gap: 2, // small space between Beetle and bot
+    borderWidth: 1,
+    width: "70%",
   },
 
   title_Beetle: {
@@ -43,11 +45,17 @@ export default StyleSheet.create({
   bluetooth_setting_container: {
     flexDirection: "row",
     gap: 4,
+    width: "30%",
+    display: "flex",
+    justifyContent:  "center",
+    alignItems: "center",
   },
 
   center: {
+    display: "flex",
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 1,
   },
 
   // ==============================
