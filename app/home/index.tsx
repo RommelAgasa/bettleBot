@@ -3,6 +3,7 @@ import { Text, View } from "react-native";
 import AccelaratorButton from "./components/acceleration";
 import Bluetooth from "./components/bluetooth";
 import BreakButton from "./components/break";
+import ClawButton from "./components/claw";
 import Settings from "./components/settings";
 import style from "./screen-style";
 export default function Home(){
@@ -37,7 +38,7 @@ export default function Home(){
                         </View>
                         <View style={style.row2_right_container_right}>
                             <View style={style.claw}>
-                                <Text>Claw</Text>
+                                <ClawButton/>
                             </View>
                             <View style={style.row2_right_accelaration_break_container}>
                                 <View style={style.break}>

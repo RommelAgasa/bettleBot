@@ -17,8 +17,7 @@ export default StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    borderWidth: 2,
-    height: "30%", // takes up 30% of the screen height
+    height: "20%", // takes up 20% of the screen height
     width: "100%",
   },
 
@@ -44,7 +43,6 @@ export default StyleSheet.create({
 
   bluetooth_setting_container: {
     flexDirection: "row",
-    gap: 4,
     width: "30%",
     display: "flex",
     justifyContent:  "center",
@@ -66,7 +64,6 @@ export default StyleSheet.create({
     flex: 1, // fills remaining height
     flexDirection: "row",
     width: "100%",
-    borderWidth: 1,
   },
 
   // ----- Left side (Steering Wheel)
@@ -101,7 +98,7 @@ export default StyleSheet.create({
   // ----- Claw panel
   claw: {
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "flex-end",
     borderWidth: 1,
     padding: 20,
     height: "40%",
