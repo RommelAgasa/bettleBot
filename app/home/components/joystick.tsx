@@ -1,5 +1,9 @@
-import React, { useRef, useState } from "react";
-import { Animated, PanResponder, StyleSheet, View } from "react-native";
+import React, { useRef } from "react";
+import { Animated, StyleSheet, View } from "react-native";
+import {
+  PanGestureHandler,
+  PanGestureHandlerGestureEvent,
+} from "react-native-gesture-handler";
 
 interface JoystickProps {
   size?: number;
@@ -20,77 +24,54 @@ export default function Joystick({ size = 50, onMove, onStop }: JoystickProps) {
   // Animated values for the stick position
   const pan = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
 
-  // State to track current position
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const handleGestureEvent = (event: PanGestureHandlerGestureEvent) => {
+    const { translationX: dx, translationY: dy } = event.nativeEvent;
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
+    // Calculate distance from center
+    const distance = Math.sqrt(dx * dx + dy * dy);
 
-      onPanResponderGrant: () => {
-        // Set offset to current value when touch starts
-        pan.setOffset({
-          x: position.x,
-          y: position.y,
-        });
-      },
+    // Limit the movement to the max distance
+    let newX = dx;
+    let newY = dy;
 
-      onPanResponderMove: (_, gesture) => {
-        const { dx, dy } = gesture;
+    if (distance > maxDistance) {
+      const angle = Math.atan2(dy, dx);
+      newX = Math.cos(angle) * maxDistance;
+      newY = Math.sin(angle) * maxDistance;
+    }
 
-        // Calculate distance from center
-        const distance = Math.sqrt(dx * dx + dy * dy);
+    // Update animated value with constrained position
+    pan.setValue({ x: newX, y: newY });
 
-        // Limit the movement to the max distance
-        let newX = dx;
-        let newY = dy;
+    // Calculate angle and normalized distance
+    const angle = Math.atan2(newY, newX) * (180 / Math.PI);
+    const normalizedDistance = Math.min(distance / maxDistance, 1);
 
-        if (distance > maxDistance) {
-          const angle = Math.atan2(dy, dx);
-          newX = Math.cos(angle) * maxDistance;
-          newY = Math.sin(angle) * maxDistance;
-        }
+    // Callback with joystick data
+    if (onMove) {
+      onMove({
+        x: newX / maxDistance, // normalized -1 to 1
+        y: -newY / maxDistance, // inverted Y (up is positive)
+        angle: angle,
+        distance: normalizedDistance,
+      });
+    }
+  };
 
-        // Update animated value
-        pan.setValue({ x: newX, y: newY });
-        setPosition({ x: newX, y: newY });
+  const handleGestureEnd = () => {
+    // Reset position with animation - less bouncy
+    Animated.spring(pan, {
+      toValue: { x: 0, y: 0 },
+      useNativeDriver: false,
+      tension: 40,
+      friction: 10,
+    }).start();
 
-        // Calculate angle and normalized distance
-        const angle = Math.atan2(newY, newX) * (180 / Math.PI);
-        const normalizedDistance = Math.min(distance / maxDistance, 1);
-
-        // Callback with joystick data
-        if (onMove) {
-          onMove({
-            x: newX / maxDistance, // normalized -1 to 1
-            y: -newY / maxDistance, // inverted Y (up is positive)
-            angle: angle,
-            distance: normalizedDistance,
-          });
-        }
-      },
-
-      onPanResponderRelease: () => {
-        // Reset position with animation
-        pan.flattenOffset();
-
-        Animated.spring(pan, {
-          toValue: { x: 0, y: 0 },
-          useNativeDriver: false,
-          speed: 100,
-          bounciness: 20,
-        }).start();
-
-        setPosition({ x: 0, y: 0 });
-
-        // Callback when joystick is released
-        if (onStop) {
-          onStop();
-        }
-      },
-    })
-  ).current;
+    // Callback when joystick is released
+    if (onStop) {
+      onStop();
+    }
+  };
 
   return (
     <View style={[styles.container, { width: size, height: size }]}>
@@ -111,21 +92,27 @@ export default function Joystick({ size = 50, onMove, onStop }: JoystickProps) {
           <View style={[styles.line, styles.lineHorizontal]} />
         </View>
 
-        {/* Inner stick (movable) */}
-        <Animated.View
-          {...panResponder.panHandlers}
-          style={[
-            styles.stick,
-            {
-              width: stickSize,
-              height: stickSize,
-              borderRadius: stickSize / 2,
-              transform: [{ translateX: pan.x }, { translateY: pan.y }],
-            },
-          ]}
+        {/* Inner stick (movable) with PanGestureHandler */}
+        <PanGestureHandler
+          onGestureEvent={handleGestureEvent}
+          onEnded={handleGestureEnd}
+          onCancelled={handleGestureEnd}
+          simultaneousHandlers={undefined}
         >
-          <View style={styles.stickInner} />
-        </Animated.View>
+          <Animated.View
+            style={[
+              styles.stick,
+              {
+                width: stickSize,
+                height: stickSize,
+                borderRadius: stickSize / 2,
+                transform: [{ translateX: pan.x }, { translateY: pan.y }],
+              },
+            ]}
+          >
+            <View style={styles.stickInner} />
+          </Animated.View>
+        </PanGestureHandler>
       </View>
     </View>
   );

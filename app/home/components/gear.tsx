@@ -1,6 +1,10 @@
 import * as Haptics from "expo-haptics";
 import React, { useRef, useState } from "react";
-import { Animated, PanResponder, StyleSheet, Text, View } from "react-native";
+import { Animated, StyleSheet, Text, View } from "react-native";
+import {
+  PanGestureHandler,
+  PanGestureHandlerGestureEvent,
+} from "react-native-gesture-handler";
 
 interface GearSelectorProps {
   size?: number;
@@ -8,18 +12,17 @@ interface GearSelectorProps {
 }
 
 export default function GearSelector({
-  size = 180,
+  size = 160,
   onGearChange,
 }: GearSelectorProps) {
   // Gear positions (vertical: top, middle, bottom)
   const gearPositions = [
-    { name: "Gear 2", y: -55 },
-    { name: "Gear 1", y: 0 },
-    { name: "Reverse", y: 55 },
+    { name: "2", y: -55 },
+    { name: "1", y: 0 },
+    { name: "R", y: 55 },
   ];
 
   const stickSize = size / 3.5;
-  const snapThreshold = 25; // Distance to trigger magnetic snap
 
   // Current selected gear
   const [selectedGear, setSelectedGear] = useState<number>(1); // Start at Gear 1
@@ -53,12 +56,12 @@ export default function GearSelector({
 
     setSelectedGear(gearIndex);
 
-    // Smooth spring animation to snap position
+    // Smooth spring animation to snap position - less bouncy
     Animated.spring(pan, {
       toValue: { x: 0, y: targetY },
       useNativeDriver: false,
-      speed: 25,
-      bounciness: 10,
+      tension: 60,
+      friction: 12,
     }).start();
 
     // Haptic feedback
@@ -70,66 +73,44 @@ export default function GearSelector({
     }
   };
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
+  const handleGestureEvent = (event: PanGestureHandlerGestureEvent) => {
+    const { translationY: dy } = event.nativeEvent;
 
-      onPanResponderGrant: () => {
-        // Stop any ongoing animations
-        pan.stopAnimation((value) => {
-          // Set offset to the current animated value
-          pan.setOffset({
-            x: 0,
-            y: value.y,
-          });
-          pan.setValue({ x: 0, y: 0 });
-        });
-      },
+    // Only allow vertical movement, constrain to gear positions
+    let newY = dy;
 
-      onPanResponderMove: (_, gesture) => {
-        const { dy } = gesture;
+    // Limit movement to max range
+    const maxY = gearPositions[gearPositions.length - 1].y;
+    const minY = gearPositions[0].y;
 
-        // Only allow vertical movement, constrain to gear positions
-        let newY = dy;
+    newY = Math.max(minY, Math.min(maxY, newY));
 
-        // Limit movement to max range
-        const maxY = gearPositions[gearPositions.length - 1].y;
-        const minY = gearPositions[0].y;
+    // Update animated value with constrained position
+    pan.setValue({ x: 0, y: newY });
 
-        newY = Math.max(minY, Math.min(maxY, newY));
+    // Check for magnetic snap while dragging
+    gearPositions.forEach((gear, index) => {
+      const distance = Math.abs(newY - gear.y);
+      if (distance < 25 && selectedGear !== index) {
+        // Light haptic when entering snap zone
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+    });
+  };
 
-        // Update animated value (only Y axis)
-        pan.setValue({ x: 0, y: newY });
+  const handleGestureEnd = () => {
+    // Get the current animated value
+    let currentY = 0;
+    pan.y.stopAnimation((value) => {
+      currentY = value;
+    });
 
-        // Check for magnetic snap while dragging
-        gearPositions.forEach((gear, index) => {
-          const distance = Math.abs(newY - gear.y);
-          if (distance < snapThreshold && selectedGear !== index) {
-            // Light haptic when entering snap zone
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          }
-        });
-      },
+    // Find closest gear based on current position
+    const closestIndex = findClosestGear(currentY);
 
-      onPanResponderRelease: () => {
-        // Get the current animated value before flattening
-        let currentY = 0;
-        pan.y.stopAnimation((value) => {
-          currentY = value;
-        });
-
-        // Flatten offset to get the actual position
-        pan.flattenOffset();
-
-        // Find closest gear based on current position
-        const closestIndex = findClosestGear(currentY);
-
-        // Snap to the closest gear (it will stay there)
-        snapToGear(closestIndex);
-      },
-    })
-  ).current;
+    // Snap to the closest gear (it will stay there)
+    snapToGear(closestIndex);
+  };
 
   return (
     <View style={[styles.container, { height: size }]}>
@@ -162,22 +143,28 @@ export default function GearSelector({
             />
           ))}
 
-          {/* Movable Gear Stick */}
-          <Animated.View
-            {...panResponder.panHandlers}
-            style={[
-              styles.stick,
-              {
-                width: stickSize,
-                height: stickSize,
-                borderRadius: stickSize / 2,
-                top: size / 2 - stickSize / 2,
-                transform: [{ translateY: pan.y }],
-              },
-            ]}
+          {/* Movable Gear Stick with PanGestureHandler */}
+          <PanGestureHandler
+            onGestureEvent={handleGestureEvent}
+            onEnded={handleGestureEnd}
+            onCancelled={handleGestureEnd}
+            simultaneousHandlers={undefined}
           >
-            <View style={styles.stickInner} />
-          </Animated.View>
+            <Animated.View
+              style={[
+                styles.stick,
+                {
+                  width: stickSize,
+                  height: stickSize,
+                  borderRadius: stickSize / 2,
+                  top: size / 2 - stickSize / 2,
+                  transform: [{ translateY: pan.y }],
+                },
+              ]}
+            >
+              <View style={styles.stickInner} />
+            </Animated.View>
+          </PanGestureHandler>
         </View>
       </View>
     </View>

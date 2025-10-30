@@ -5,6 +5,7 @@ import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
 import { useEffect } from "react";
 import { View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { ControlProvider } from "./components/control-context";
 import layoutStyle from "./layout-style";
@@ -47,7 +48,7 @@ export default function WelcomeLayout() {
   }, []);
 
   return (
-    <>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       {/* Hide top status bar */}
       <StatusBar hidden />
 
@@ -56,7 +57,7 @@ export default function WelcomeLayout() {
           <Slot />
         </ControlProvider>
       </View>
-    </>
+    </GestureHandlerRootView>
   );
 }
 

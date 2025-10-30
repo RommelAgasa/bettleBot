@@ -47,10 +47,10 @@ export default function Home() {
           </View>
         </View>
 
-        <View style={style.row2}>
+        <View style={style.row2} pointerEvents="box-none">
           {/* Left side - Joystick */}
-          <View style={style.row2_left_container}>
-            <View style={style.joystick_wrapper}>
+          <View style={style.row2_left_container} pointerEvents="box-none">
+            <View style={style.joystick_wrapper} collapsable={false}>
               {controlType === "joystick" ? (
                 <Joystick
                   size={150}
@@ -68,17 +68,17 @@ export default function Home() {
           </View>
 
           {/* Right side - Gear and Claw side by side */}
-          <View style={style.row2_right_container}>
+          <View style={style.row2_right_container} pointerEvents="box-none">
             {/* Gear Selector - Left */}
-            <View style={style.gear_container}>
-              <View style={style.gear_wrapper}>
+            <View style={style.gear_container} pointerEvents="box-none">
+              <View style={style.gear_wrapper} collapsable={false}>
                 <GearSelector />
               </View>
             </View>
 
             {/* Claw Button - Right */}
-            <View style={style.claw_container}>
-              <View style={style.claw_wrapper}>
+            <View style={style.claw_container} pointerEvents="box-none">
+              <View style={style.claw_wrapper} collapsable={false}>
                 <ClawButton />
               </View>
             </View>

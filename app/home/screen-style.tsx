@@ -17,7 +17,7 @@ export default StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    height: "20%", // takes up 20% of the screen height
+    height: "20%",
     width: "100%",
     borderWidth: 1,
   },
@@ -25,7 +25,6 @@ export default StyleSheet.create({
   title_container: {
     flexDirection: "row",
     padding: 20,
-    gap: 2, // small space between Beetle and bot
     borderWidth: 1,
     width: "60%",
   },
@@ -70,14 +69,14 @@ export default StyleSheet.create({
   // (Left: Steering | Right: Gear + Claw + Accel/Break)
   // ==============================
   row2: {
-    flex: 1, // fills remaining height
+    flex: 1,
     flexDirection: "row",
     width: "100%",
   },
 
   // ----- Left side (Movement Control) - 60%
   row2_left_container: {
-    flex: 0.6, // 60% width
+    flex: 0.6,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
@@ -109,8 +108,8 @@ export default StyleSheet.create({
 
   // Gear wrapper for repositioning
   gear_wrapper: {
-    marginTop: 100, 
-    marginLeft: 0, 
+    marginTop: 100,
+    marginLeft: 0,
     marginRight: 20,
     marginBottom: 0,
   },
@@ -124,7 +123,7 @@ export default StyleSheet.create({
 
   // Claw wrapper for repositioning
   claw_wrapper: {
-    marginTop: 100, 
+    marginTop: 100,
     marginLeft: 0,
     marginRight: 20,
     marginBottom: 0,
