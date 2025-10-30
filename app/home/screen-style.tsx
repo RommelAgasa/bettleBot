@@ -75,9 +75,9 @@ export default StyleSheet.create({
     width: "100%",
   },
 
-  // ----- Left side (Movement Control)
+  // ----- Left side (Movement Control) - 60%
   row2_left_container: {
-    flex: 1, // 50% width
+    flex: 0.6, // 60% width
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
@@ -91,56 +91,43 @@ export default StyleSheet.create({
     marginBottom: 0,
   },
 
-  // ----- Right side (Gear + Controls)
+  // ----- Right side (Gear + Claw) - 40%
   row2_right_container: {
-    flex: 1, // 50% width
+    flex: 0.4, // 40% width
     flexDirection: "row",
-    borderWidth: 1,
-  },
-
-  // Gear section
-  row2_right_container_left: {
-    flex: 0.4, // 40% of right container
-    justifyContent: "flex-end",
+    justifyContent: "space-evenly",
     alignItems: "center",
     borderWidth: 1,
   },
 
-  // Claw + Accel/Break section
-  row2_right_container_right: {
-    flex: 0.6, // 60% of right container
-    borderWidth: 1,
-  },
-
-  // ----- Claw panel
-  claw: {
-    justifyContent: "center",
-    alignItems: "flex-end",
-    borderWidth: 1,
-    padding: 20,
-    height: "40%",
-  },
-
-  // ----- Acceleration + Break (side-by-side)
-  row2_right_accelaration_break_container: {
-    flex: 1,
-    flexDirection: "row",
-  },
-
-  acceleration: {
+  // Gear Selector - Left side (20% of total)
+  gear_container: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1,
-    padding: 20,
   },
 
-  break: {
+  // Gear wrapper for repositioning
+  gear_wrapper: {
+    marginTop: 100, 
+    marginLeft: 0, 
+    marginRight: 20,
+    marginBottom: 0,
+  },
+
+  // Claw Button - Right side (20% of total)
+  claw_container: {
     flex: 1,
-    justifyContent: "flex-end",
+    justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1,
-    padding: 20,
+  },
+
+  // Claw wrapper for repositioning
+  claw_wrapper: {
+    marginTop: 100, 
+    marginLeft: 0,
+    marginRight: 20,
+    marginBottom: 0,
   },
 });
 

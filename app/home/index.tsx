@@ -1,8 +1,6 @@
 import CustomText from "@/src/theme/customText";
 import { View } from "react-native";
-import AccelaratorButton from "./components/acceleration";
 import Bluetooth from "./components/bluetooth";
-import BreakButton from "./components/break";
 import ClawButton from "./components/claw";
 import { useControl } from "./components/control-context";
 import GearSelector from "./components/gear";
@@ -50,6 +48,7 @@ export default function Home() {
         </View>
 
         <View style={style.row2}>
+          {/* Left side - Joystick */}
           <View style={style.row2_left_container}>
             <View style={style.joystick_wrapper}>
               {controlType === "joystick" ? (
@@ -67,29 +66,20 @@ export default function Home() {
               )}
             </View>
           </View>
+
+          {/* Right side - Gear and Claw side by side */}
           <View style={style.row2_right_container}>
-            <View style={style.row2_right_container_left}>
-              <GearSelector />
-            </View>
-            <View style={style.row2_right_container_right}>
-              <View style={style.claw}>
-                <ClawButton />
+            {/* Gear Selector - Left */}
+            <View style={style.gear_container}>
+              <View style={style.gear_wrapper}>
+                <GearSelector />
               </View>
-              <View style={style.row2_right_accelaration_break_container}>
-                <View style={style.break}>
-                  <View
-                    style={{
-                      display: "flex",
-                      justifyContent: "flex-end",
-                      alignItems: "center",
-                    }}
-                  >
-                    <BreakButton />
-                  </View>
-                </View>
-                <View style={style.acceleration}>
-                  <AccelaratorButton />
-                </View>
+            </View>
+
+            {/* Claw Button - Right */}
+            <View style={style.claw_container}>
+              <View style={style.claw_wrapper}>
+                <ClawButton />
               </View>
             </View>
           </View>

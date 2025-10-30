@@ -183,33 +183,39 @@ const styles = StyleSheet.create({
   },
   sliderWrapper: {
     shadowColor: "#000",
-    shadowOffset: { width: 2, height: 4 },
-    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
     shadowRadius: 8,
-    elevation: 5,
+    elevation: 8,
   },
   sliderTrack: {
-    width: 70,
-    backgroundColor: "#e8e8e8",
-    borderRadius: 40,
+    width: 30,
+    backgroundColor: "#6B6B6B", // Dark gray track like in the image
+    borderRadius: 15,
     justifyContent: "flex-start",
     alignItems: "center",
-    overflow: "hidden",
+    overflow: "visible", // Allow handle to extend beyond track
   },
   sliderHandle: {
-    width: 80,
+    width: 50,
     height: 80,
-    borderRadius: 40,
-    backgroundColor: "#e8e8e8",
+    borderRadius: 25,
+    backgroundColor: "transparent",
     position: "absolute",
     top: 0,
     justifyContent: "center",
     alignItems: "center",
   },
   handleOval: {
-    width: 45,
-    height: 45, // Slightly reduced height so it's fully visible on top/bottom
-    borderRadius: 30,
+    width: 50,
+    height: 50,
+    borderRadius: 25, // Fully circular orange knob
     backgroundColor: "#FF9E42",
+    // Shadow for the orange knob
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
 });
