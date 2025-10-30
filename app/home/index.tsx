@@ -19,10 +19,10 @@ export default function Home(){
                     </View>
 
                     <View style={style.bluetooth_setting_container}>
-                        <View style={style.center}>
+                        <View style={style.bluetooth}>
                             <Bluetooth/>
                         </View>
-                        <View style={style.center}>
+                        <View style={style.setting}>
                             <Settings/>
                         </View>
                     </View>

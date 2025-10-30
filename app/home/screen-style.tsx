@@ -15,10 +15,11 @@ export default StyleSheet.create({
   // ==============================
   row1: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
     height: "20%", // takes up 20% of the screen height
     width: "100%",
+    borderWidth: 1,
   },
 
   title_container: {
@@ -26,7 +27,16 @@ export default StyleSheet.create({
     padding: 20,
     gap: 2, // small space between Beetle and bot
     borderWidth: 1,
-    width: "70%",
+    width: "60%",
+  },
+
+  bluetooth_setting_container: {
+    flexDirection: "row",
+    width: "40%",
+    display: "flex",
+    justifyContent:  "center",
+    alignItems: "center",
+    margin: 0,
   },
 
   title_Beetle: {
@@ -41,15 +51,14 @@ export default StyleSheet.create({
     fontWeight: "500",
   },
 
-  bluetooth_setting_container: {
-    flexDirection: "row",
-    width: "30%",
+  bluetooth: {
     display: "flex",
-    justifyContent:  "center",
-    alignItems: "center",
+    justifyContent: "center",
+    alignItems: "flex-end",
+    flex: 1,
   },
 
-  center: {
+  setting: {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
@@ -84,7 +93,7 @@ export default StyleSheet.create({
   // Gear section
   row2_right_container_left: {
     flex: 0.4, // 40% of right container
-    justifyContent: "center",
+    justifyContent: "flex-end",
     alignItems: "center",
     borderWidth: 1,
   },
