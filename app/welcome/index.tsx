@@ -10,7 +10,7 @@ export default function WelcomeScreen() {
   useEffect(() => {
     const timer = setTimeout(() => {
       router.replace("/home");
-    }, 3000);
+    }, 2000);
 
     return () => clearTimeout(timer); // cleanup on unmount
   }, [router]);

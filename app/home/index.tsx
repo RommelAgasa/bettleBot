@@ -60,7 +60,7 @@ export default function Home() {
                 />
               ) : (
                 <SteeringWheel
-                  size={150}
+                  size={220}
                   onRotate={handleSteeringRotate}
                   onRelease={() => console.log("Steering released")}
                 />
