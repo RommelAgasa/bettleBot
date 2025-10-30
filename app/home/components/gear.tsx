@@ -1,150 +1,182 @@
 import * as Haptics from "expo-haptics";
 import React, { useRef, useState } from "react";
-import {
-  Animated,
-  GestureResponderEvent,
-  PanResponder,
-  PanResponderGestureState,
-  PanResponderInstance,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Animated, PanResponder, StyleSheet, Text, View } from "react-native";
 
 interface GearSelectorProps {
+  size?: number;
   onGearChange?: (gear: string) => void;
 }
 
-export default function GearSelector({ onGearChange }: GearSelectorProps) {
-  // 🏷 Available gear positions (top to bottom)
-  const positions = ["Gear 2", "Gear 1", "Reverse"];
+export default function GearSelector({
+  size = 180,
+  onGearChange,
+}: GearSelectorProps) {
+  // Gear positions (vertical: top, middle, bottom)
+  const gearPositions = [
+    { name: "Gear 2", y: -55 },
+    { name: "Gear 1", y: 0 },
+    { name: "Reverse", y: 55 },
+  ];
 
-  // 📏 Total height of the track and handle dimensions
-  const totalHeight = 160; // Total visible slider area
-  const handleHeight = 80; // Handle (movable oval button)
-  const maxTravel = totalHeight - handleHeight; // Ensures handle never leaves track
+  const stickSize = size / 3.5;
+  const snapThreshold = 25; // Distance to trigger magnetic snap
 
-  // 📍 Calculate vertical distance between each gear stop
-  const slotHeight = maxTravel / (positions.length - 1);
+  // Current selected gear
+  const [selectedGear, setSelectedGear] = useState<number>(1); // Start at Gear 1
 
-  // ⚙️ Start in the middle gear (Gear 1)
-  const [selectedIndex, setSelectedIndex] = useState<number>(1);
-
-  // 🎞️ Animated Y position for the slider handle
-  const translateY = useRef(new Animated.Value(selectedIndex * slotHeight)).current;
+  // Animated values for the stick position
+  const pan = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
 
   /**
-   * 🔄 Function to change gear with animation and haptic feedback
+   * Find closest gear position and snap to it
    */
-  const changeGear = (index: number) => {
-    if (index < 0 || index >= positions.length) return; // guard
+  const findClosestGear = (currentY: number): number => {
+    let closestIndex = 1; // Default to Gear 1
+    let minDistance = Math.abs(currentY - gearPositions[1].y);
 
-    setSelectedIndex(index);
+    gearPositions.forEach((gear, index) => {
+      const distance = Math.abs(currentY - gear.y);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestIndex = index;
+      }
+    });
 
-    // 🌀 Smooth spring animation for handle movement
-    Animated.spring(translateY, {
-      toValue: index * slotHeight,
-      damping: 10,
-      mass: 1,
-      stiffness: 100,
-      useNativeDriver: true,
-    }).start();
-
-    // 💥 Haptic feedback for tactile feel
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    // 📤 Notify parent component of the gear change (optional)
-    if (onGearChange) onGearChange(positions[index]);
+    return closestIndex;
   };
 
   /**
-   * ✋ PanResponder — handles dragging gestures on the handle
+   * Snap to gear with animation and haptic feedback
    */
-  const panResponder: PanResponderInstance = useRef(
+  const snapToGear = (gearIndex: number) => {
+    const targetY = gearPositions[gearIndex].y;
+
+    setSelectedGear(gearIndex);
+
+    // Smooth spring animation to snap position
+    Animated.spring(pan, {
+      toValue: { x: 0, y: targetY },
+      useNativeDriver: false,
+      speed: 25,
+      bounciness: 10,
+    }).start();
+
+    // Haptic feedback
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    // Notify parent
+    if (onGearChange) {
+      onGearChange(gearPositions[gearIndex].name);
+    }
+  };
+
+  const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => false, // don't start immediately
-      onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dy) > 10, // only respond to significant vertical movement
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
 
-      // 📍 While dragging
-      onPanResponderMove: (
-        _: GestureResponderEvent,
-        gesture: PanResponderGestureState
-      ) => {
-        const newY = gesture.dy + selectedIndex * slotHeight;
-
-        // 🚫 Prevent dragging beyond top/bottom limits
-        if (newY >= 0 && newY <= maxTravel) {
-          translateY.setValue(newY);
-        }
+      onPanResponderGrant: () => {
+        // Stop any ongoing animations
+        pan.stopAnimation((value) => {
+          // Set offset to the current animated value
+          pan.setOffset({
+            x: 0,
+            y: value.y,
+          });
+          pan.setValue({ x: 0, y: 0 });
+        });
       },
 
-      // 🏁 When drag is released, determine which gear to snap to
-      onPanResponderRelease: (
-        _: GestureResponderEvent,
-        gesture: PanResponderGestureState
-      ) => {
-        const velocity = gesture.vy; // finger flick speed
-        let targetIndex = selectedIndex;
+      onPanResponderMove: (_, gesture) => {
+        const { dy } = gesture;
 
-        // ⚙️ Adjusted drag sensitivity (more precise, less jumpy)
-        const dragThreshold = 35; // increased from 20 → more controlled
+        // Only allow vertical movement, constrain to gear positions
+        let newY = dy;
 
-        // If drag is downward past threshold → next gear
-        if (gesture.dy > dragThreshold && selectedIndex < positions.length - 1) {
-          targetIndex = selectedIndex + 1;
-        }
-        // If drag is upward past threshold → previous gear
-        else if (gesture.dy < -dragThreshold && selectedIndex > 0) {
-          targetIndex = selectedIndex - 1;
-        }
+        // Limit movement to max range
+        const maxY = gearPositions[gearPositions.length - 1].y;
+        const minY = gearPositions[0].y;
 
-        // 🌀 Velocity bias for flicks (but not too sensitive)
-        if (Math.abs(velocity) > 1.6) {
-          if (velocity > 0 && selectedIndex < positions.length - 1)
-            targetIndex = selectedIndex + 1;
-          else if (velocity < 0 && selectedIndex > 0)
-            targetIndex = selectedIndex - 1;
-        }
+        newY = Math.max(minY, Math.min(maxY, newY));
 
-        // 🔒 Keep target index within valid range
-        targetIndex = Math.max(0, Math.min(targetIndex, positions.length - 1));
+        // Update animated value (only Y axis)
+        pan.setValue({ x: 0, y: newY });
 
-        // 🎬 Apply gear change
-        changeGear(targetIndex);
+        // Check for magnetic snap while dragging
+        gearPositions.forEach((gear, index) => {
+          const distance = Math.abs(newY - gear.y);
+          if (distance < snapThreshold && selectedGear !== index) {
+            // Light haptic when entering snap zone
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          }
+        });
+      },
+
+      onPanResponderRelease: () => {
+        // Get the current animated value before flattening
+        let currentY = 0;
+        pan.y.stopAnimation((value) => {
+          currentY = value;
+        });
+
+        // Flatten offset to get the actual position
+        pan.flattenOffset();
+
+        // Find closest gear based on current position
+        const closestIndex = findClosestGear(currentY);
+
+        // Snap to the closest gear (it will stay there)
+        snapToGear(closestIndex);
       },
     })
   ).current;
 
   return (
-    <View style={styles.container}>
-      {/* 🔠 Gear labels (Gear 2, Gear 1, Reverse) */}
+    <View style={[styles.container, { height: size }]}>
+      {/* Gear Labels */}
       <View style={styles.labelsContainer}>
-        {positions.map((pos, i) => (
-          <View key={i} style={[styles.labelSlot, { height: handleHeight / 1.5 }]}>
-            <Text
-              style={[
-                styles.label,
-                selectedIndex === i && styles.labelActive, // highlight current gear
-              ]}
-            >
-              {pos}
-            </Text>
-          </View>
+        {gearPositions.map((gear, index) => (
+          <Text
+            key={index}
+            style={[styles.label, selectedGear === index && styles.labelActive]}
+          >
+            {gear.name}
+          </Text>
         ))}
       </View>
 
-      {/* 🎚 Main slider track */}
-      <View style={styles.sliderWrapper}>
-        <View style={[styles.sliderTrack, { height: totalHeight }]}>
-          {/* 🟠 Movable orange handle */}
+      {/* Gear Stick Track */}
+      <View style={styles.trackContainer}>
+        <View style={[styles.track, { height: size }]}>
+          {/* Gear position indicators */}
+          {gearPositions.map((gear, index) => (
+            <View
+              key={index}
+              style={[
+                styles.positionIndicator,
+                {
+                  top: size / 2 + gear.y - 2,
+                },
+                selectedGear === index && styles.positionIndicatorActive,
+              ]}
+            />
+          ))}
+
+          {/* Movable Gear Stick */}
           <Animated.View
             {...panResponder.panHandlers}
             style={[
-              styles.sliderHandle,
-              { transform: [{ translateY }] },
+              styles.stick,
+              {
+                width: stickSize,
+                height: stickSize,
+                borderRadius: stickSize / 2,
+                top: size / 2 - stickSize / 2,
+                transform: [{ translateY: pan.y }],
+              },
             ]}
           >
-            <View style={styles.handleOval} />
+            <View style={styles.stickInner} />
           </Animated.View>
         </View>
       </View>
@@ -152,70 +184,79 @@ export default function GearSelector({ onGearChange }: GearSelectorProps) {
   );
 }
 
-/**
- * 🎨 Styles
- */
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 20,
-    paddingVertical: 20,
-    paddingHorizontal: 20,
+    gap: 15,
   },
   labelsContainer: {
     flexDirection: "column",
-    justifyContent: "space-around",
-    height: 160,
-  },
-  labelSlot: {
-    justifyContent: "center",
+    justifyContent: "space-between",
+    height: "100%",
+    paddingVertical: 5,
   },
   label: {
     fontSize: 14,
     color: "#999",
     fontWeight: "500",
-    letterSpacing: 0.5,
+    textAlign: "right",
+    paddingRight: 5,
   },
   labelActive: {
-    color: "#FF9E42", // 🔸 orange for active gear
+    color: "#FF9E42",
     fontWeight: "700",
+    fontSize: 16,
   },
-  sliderWrapper: {
+  trackContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  track: {
+    width: 60,
+    backgroundColor: "#F5F5F5",
+    borderRadius: 30,
+    borderWidth: 3,
+    borderColor: "#DDDDDD",
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+    // Shadow
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 8,
   },
-  sliderTrack: {
-    width: 30,
-    backgroundColor: "#6B6B6B", // Dark gray track like in the image
-    borderRadius: 15,
-    justifyContent: "flex-start",
-    alignItems: "center",
-    overflow: "visible", // Allow handle to extend beyond track
-  },
-  sliderHandle: {
-    width: 50,
-    height: 80,
-    borderRadius: 25,
-    backgroundColor: "transparent",
+  positionIndicator: {
     position: "absolute",
-    top: 0,
+    width: 30,
+    height: 4,
+    backgroundColor: "#DDDDDD",
+    borderRadius: 2,
+  },
+  positionIndicatorActive: {
+    backgroundColor: "#FF9E42",
+    width: 35,
+    height: 5,
+  },
+  stick: {
+    backgroundColor: "#FF9E42",
     justifyContent: "center",
     alignItems: "center",
-  },
-  handleOval: {
-    width: 50,
-    height: 50,
-    borderRadius: 25, // Fully circular orange knob
-    backgroundColor: "#FF9E42",
-    // Shadow for the orange knob
+    position: "absolute",
+    // Shadow
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
   },
+  stickInner: {
+    width: "40%",
+    height: "40%",
+    borderRadius: 100,
+    backgroundColor: "#FFFFFF",
+  },
 });
+

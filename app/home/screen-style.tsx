@@ -87,7 +87,7 @@ export default StyleSheet.create({
   joystick_wrapper: {
     marginTop: 80,
     marginLeft: 0,
-    marginRight: 130,
+    marginRight: 180,
     marginBottom: 0,
   },
 
