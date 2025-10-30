@@ -34,7 +34,7 @@ export default StyleSheet.create({
     flexDirection: "row",
     width: "40%",
     display: "flex",
-    justifyContent:  "center",
+    justifyContent: "center",
     alignItems: "center",
     margin: 0,
   },
@@ -75,12 +75,20 @@ export default StyleSheet.create({
     width: "100%",
   },
 
-  // ----- Left side (Steering Wheel)
+  // ----- Left side (Movement Control)
   row2_left_container: {
     flex: 1, // 50% width
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
+  },
+
+  // Joystick/Steering Wheel wrapper for positioning
+  joystick_wrapper: {
+    marginTop: 80,
+    marginLeft: 0,
+    marginRight: 130,
+    marginBottom: 0,
   },
 
   // ----- Right side (Gear + Controls)
@@ -135,3 +143,4 @@ export default StyleSheet.create({
     padding: 20,
   },
 });
+

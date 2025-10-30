@@ -6,26 +6,43 @@ import * as SystemUI from "expo-system-ui";
 import { useEffect } from "react";
 import { View } from "react-native";
 
+import { ControlProvider } from "./components/control-context";
 import layoutStyle from "./layout-style";
 
 export default function WelcomeLayout() {
-
   useEffect(() => {
-    // Lock orientation to landscape
-    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+    const setupOrientation = async () => {
+      try {
+        // Lock orientation to landscape
+        await ScreenOrientation.lockAsync(
+          ScreenOrientation.OrientationLock.LANDSCAPE
+        );
 
-    // Set safe area / background color (optional)
-    SystemUI.setBackgroundColorAsync("black");
+        // Set safe area / background color (optional)
+        await SystemUI.setBackgroundColorAsync("black");
 
-    // Hide navigation bar, but allow swipe to reveal
-    NavigationBar.setVisibilityAsync("hidden");
-    NavigationBar.setBehaviorAsync("inset-swipe"); 
-    // Options: "inset-swipe" (auto-hide), "overlay-swipe" (overlay style), or "inset" (always visible)
+        // Hide navigation bar, but allow swipe to reveal
+        await NavigationBar.setVisibilityAsync("hidden");
+        await NavigationBar.setBehaviorAsync("inset-swipe");
+        // Options: "inset-swipe" (auto-hide), "overlay-swipe" (overlay style), or "inset" (always visible)
+      } catch (error) {
+        console.log("Error setting up orientation:", error);
+      }
+    };
+
+    setupOrientation();
 
     return () => {
       // Cleanup when leaving this layout
-      ScreenOrientation.unlockAsync();
-      NavigationBar.setVisibilityAsync("visible");
+      const cleanup = async () => {
+        try {
+          await ScreenOrientation.unlockAsync();
+          await NavigationBar.setVisibilityAsync("visible");
+        } catch (error) {
+          console.log("Error cleaning up orientation:", error);
+        }
+      };
+      cleanup();
     };
   }, []);
 
@@ -35,8 +52,11 @@ export default function WelcomeLayout() {
       <StatusBar hidden />
 
       <View style={layoutStyle.container}>
-        <Slot />
+        <ControlProvider>
+          <Slot />
+        </ControlProvider>
       </View>
     </>
   );
 }
+
