@@ -30,6 +30,9 @@ export default function GearSelector({
   // Animated values for the stick position
   const pan = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
 
+  // Track the starting position when drag begins
+  const startPosition = useRef(0);
+
   /**
    * Find closest gear position and snap to it
    */
@@ -73,11 +76,18 @@ export default function GearSelector({
     }
   };
 
+  const handleGestureStart = () => {
+    // Capture the current position when drag starts
+    pan.y.stopAnimation((value) => {
+      startPosition.current = value;
+    });
+  };
+
   const handleGestureEvent = (event: PanGestureHandlerGestureEvent) => {
     const { translationY: dy } = event.nativeEvent;
 
-    // Only allow vertical movement, constrain to gear positions
-    let newY = dy;
+    // Add translation to starting position (not reset to 0)
+    let newY = startPosition.current + dy;
 
     // Limit movement to max range
     const maxY = gearPositions[gearPositions.length - 1].y;
@@ -145,6 +155,7 @@ export default function GearSelector({
 
           {/* Movable Gear Stick with PanGestureHandler */}
           <PanGestureHandler
+            onBegan={handleGestureStart}
             onGestureEvent={handleGestureEvent}
             onEnded={handleGestureEnd}
             onCancelled={handleGestureEnd}
