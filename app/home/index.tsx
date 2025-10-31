@@ -1,11 +1,12 @@
 import CustomText from "@/src/theme/customText";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import AccelaratorButton from "./components/acceleration";
 import Bluetooth from "./components/bluetooth";
 import BreakButton from "./components/break";
 import ClawButton from "./components/claw";
 import GearSelector from "./components/gear";
 import Settings from "./components/settings";
+import SteeringWheel from "./components/steeringWheel";
 import style from "./screen-style";
 export default function Home(){
     return (
@@ -31,7 +32,7 @@ export default function Home(){
 
                 <View style={style.row2}>
                     <View style={style.row2_left_container}>
-                        <Text>Steering Wheel</Text>
+                        <SteeringWheel onAngleChange={(angle) => console.log( angle)} />
                     </View>
                     <View style={style.row2_right_container}>
                         <View style={style.row2_right_container_left}>
