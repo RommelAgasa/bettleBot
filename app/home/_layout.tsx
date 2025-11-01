@@ -7,7 +7,7 @@ import { useEffect } from "react";
 import { View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-import { ControlProvider } from "./components/control-context";
+import { ControlProvider } from "../../src/contexts/control-context";
 import layoutStyle from "./layout-style";
 
 export default function WelcomeLayout() {

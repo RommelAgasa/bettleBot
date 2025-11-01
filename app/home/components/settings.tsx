@@ -3,7 +3,6 @@ import { useRef } from "react";
 import { Animated, Pressable, StyleSheet, View } from "react-native";
 
 export default function Settings() {
-
   // Create animated scale value
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -26,7 +25,7 @@ export default function Settings() {
   };
 
   return (
-    <Pressable 
+    <Pressable
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       style={styles.iconWrapper}
@@ -38,7 +37,6 @@ export default function Settings() {
           <FontAwesome name="gear" size={40} color="#FF9E42" />
         </View>
       </Animated.View>
-      
     </Pressable>
   );
 }
@@ -54,12 +52,8 @@ const styles = StyleSheet.create({
     height: 60,
     justifyContent: "center",
     alignItems: "center",
-    // Subtle shadow for iOS
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    // Elevation for Android shadow
+    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.2)",
     elevation: 6,
   },
 });
+

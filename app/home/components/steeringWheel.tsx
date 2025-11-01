@@ -1,200 +1,204 @@
-import React, { useCallback, useRef } from "react";
-import { Animated, StyleSheet, View } from "react-native";
-import {
-  PanGestureHandler,
-  PanGestureHandlerGestureEvent,
-} from "react-native-gesture-handler";
+import React from "react";
+import { StyleSheet, View } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 import Svg, { Circle, Path } from "react-native-svg";
 
-/**
- * Steering wheel data output interface
- * Following Interface Segregation Principle - only expose what's needed
- */
+// Steering wheel data output
 interface SteeringData {
-  angle: number; // Current rotation angle in degrees
-  normalizedValue: number; // Normalized value between -1 and 1
+  angle: number;
+  normalizedValue: number;
   direction: "left" | "right" | "center";
 }
 
-/**
- * Props interface following Dependency Inversion Principle
- * Depend on abstractions (callbacks) not concrete implementations
- */
+// Props for steering wheel control
 interface SteeringWheelProps {
   size?: number;
-  maxRotation?: number; // Maximum rotation in degrees
-  sensitivity?: number; // Control responsiveness (0.1 = slow, 2.0 = fast)
+  maxRotation?: number;
+  sensitivity?: number;
   onSteeringChange?: (data: SteeringData) => void;
   onSteeringStart?: () => void;
   onSteeringEnd?: () => void;
 }
 
-/**
- * Configuration object following Single Responsibility Principle
- * Separate configuration concerns from component logic
- */
-interface SteeringConfig {
-  maxRotation: number;
-  sensitivity: number; // How responsive the wheel is
-  returnSpeed: number; // How fast it returns to center
-  deadZone: number; // Minimum angle before registering as left/right
-}
-
-/**
- * SteeringWheel Component
- *
- * Design Patterns Applied:
- * - Single Responsibility: Handles only steering wheel interaction
- * - Open/Closed: Extensible through props, closed for modification
- * - Liskov Substitution: Can be replaced with any control component
- * - Interface Segregation: Clean, focused interfaces
- * - Dependency Inversion: Depends on callback abstractions
- *
- * Additional Patterns:
- * - Strategy Pattern: Configurable behavior through config object
- * - Observer Pattern: Callbacks notify parent of state changes
- */
+// Steering wheel component
 export default function SteeringWheel({
   size = 170,
   maxRotation = 135,
-  sensitivity = 0.8, // Default: 0.8 for smooth, controlled steering
+  sensitivity = 0.8,
   onSteeringChange,
   onSteeringStart,
   onSteeringEnd,
 }: SteeringWheelProps) {
-  // Configuration object (Strategy Pattern)
-  // useMemo to prevent recreation on every render
-  const config = React.useMemo<SteeringConfig>(
-    () => ({
-      maxRotation,
-      sensitivity, // Use prop value
-      returnSpeed: 40,
-      deadZone: 5,
-    }),
-    [maxRotation, sensitivity]
-  );
+  // Shared values for native animations
+  const steeringAngle = useSharedValue(0);
+  const lastSentAngle = useSharedValue(0);
+  const cumulativeAngle = useSharedValue(0);
+  // const lastRotation = useSharedValue(0);
 
-  // Animation state
-  const rotation = useRef(new Animated.Value(0)).current;
-  const previousAngle = useRef(0);
+  // Configuration constants
+  // const ROTATION_GAIN = 1.0;
+  const PAN_GAIN = sensitivity;
+  const CENTER_DIRECT_THRESHOLD = 12;
+  const INTERP_SMOOTHING = 0.55;
+  const SEND_THRESHOLD_DEG = 0.5;
+  const MAX_ANGLE = maxRotation;
 
-  /**
-   * Calculate steering direction based on angle
-   * Single Responsibility: Pure function for direction calculation
-   */
-  const calculateDirection = useCallback(
-    (angle: number): "left" | "right" | "center" => {
-      if (Math.abs(angle) < config.deadZone) return "center";
-      return angle < 0 ? "left" : "right";
-    },
-    [config.deadZone]
-  );
+  // Rotation Gesture - Two-finger rotation (temporarily disabled)
+  /*const rotationGesture = Gesture.Rotation()
+    .onBegin(() => {
+      onSteeringStart?.();
+      lastRotation.value = 0;
+    })
+    .onUpdate((event) => {
+      const deltaRad = event.rotation - lastRotation.value;
+      lastRotation.value = event.rotation;
+      const deltaDeg = (deltaRad * 180) / Math.PI;
 
-  /**
-   * Create steering data object
-   * Single Responsibility: Data transformation
-   */
-  const createSteeringData = useCallback(
-    (angle: number): SteeringData => ({
-      angle,
-      normalizedValue: angle / config.maxRotation,
-      direction: calculateDirection(angle),
-    }),
-    [config.maxRotation, calculateDirection]
-  );
+      // Scale by rotation gain
+      const scaledDeltaDeg = deltaDeg * ROTATION_GAIN;
 
-  /**
-   * Handle gesture start
-   * Observer Pattern: Notify parent
-   */
-  const handleGestureStart = useCallback(() => {
-    rotation.stopAnimation((value) => {
-      previousAngle.current = value;
-    });
-    onSteeringStart?.();
-  }, [rotation, onSteeringStart]);
+      // Accumulate and clamp
+      let proposed = cumulativeAngle.value + scaledDeltaDeg;
+      if (proposed > MAX_ANGLE) cumulativeAngle.value = MAX_ANGLE;
+      else if (proposed < -MAX_ANGLE) cumulativeAngle.value = -MAX_ANGLE;
+      else cumulativeAngle.value = proposed;
 
-  /**
-   * Handle pan gesture movement
-   * Strategy Pattern: Uses config to determine behavior
-   */
-  const handleGestureEvent = useCallback(
-    (event: PanGestureHandlerGestureEvent) => {
-      const { translationX } = event.nativeEvent;
+      // Smart interpolation
+      const target = cumulativeAngle.value;
+      const current = steeringAngle.value;
+      let newAngle: number;
 
-      // Apply sensitivity and calculate new angle
-      let newAngle = previousAngle.current + translationX * config.sensitivity;
+      if (Math.abs(target) < CENTER_DIRECT_THRESHOLD) {
+        newAngle = target; // Direct movement near center
+      } else {
+        newAngle = current + (target - current) * INTERP_SMOOTHING;
+      }
 
-      // Constrain to max rotation
-      newAngle = Math.max(
-        -config.maxRotation,
-        Math.min(config.maxRotation, newAngle)
+      steeringAngle.value = newAngle;
+
+      // Threshold-based sending
+      if (Math.abs(newAngle - lastSentAngle.value) >= SEND_THRESHOLD_DEG) {
+        lastSentAngle.value = newAngle;
+        if (onSteeringChange) {
+          runOnJS(onSteeringChange)({
+            angle: newAngle,
+            normalizedValue: newAngle / MAX_ANGLE,
+            direction:
+              Math.abs(newAngle) < 5
+                ? "center"
+                : newAngle < 0
+                ? "left"
+                : "right",
+          });
+        }
+      }
+    })
+    .onEnd(() => {
+      steeringAngle.value = withSpring(0, {
+        damping: 14,
+        stiffness: 100,
+        mass: 1,
+      });
+      cumulativeAngle.value = 0;
+      lastSentAngle.value = 0;
+      // lastRotation.value = 0;
+      if (onSteeringEnd) {
+        runOnJS(onSteeringEnd)();
+      }
+    });*/
+
+  // Pan Gesture - Single-finger horizontal drag
+  const panGesture = Gesture.Pan()
+    .onBegin(() => {
+      "worklet";
+      if (onSteeringStart) {
+        runOnJS(onSteeringStart)();
+      }
+    })
+    .onUpdate((event) => {
+      "worklet";
+      const rawDeltaX = event.translationX;
+
+      // Apply pan gain and clamp
+      const baseTargetAngle = rawDeltaX * PAN_GAIN;
+      const targetAngle = Math.max(
+        -MAX_ANGLE,
+        Math.min(MAX_ANGLE, baseTargetAngle)
       );
 
-      // Update animation value
-      rotation.setValue(newAngle);
+      // Smart interpolation
+      const current = steeringAngle.value;
+      let newAngle: number;
 
-      // Notify parent with structured data
-      if (onSteeringChange) {
-        const steeringData = createSteeringData(newAngle);
-        onSteeringChange(steeringData);
+      if (Math.abs(targetAngle) < CENTER_DIRECT_THRESHOLD) {
+        newAngle = targetAngle;
+      } else {
+        newAngle = current + (targetAngle - current) * INTERP_SMOOTHING;
       }
-    },
-    [rotation, config, onSteeringChange, createSteeringData]
-  );
 
-  /**
-   * Handle gesture end - return to center
-   * Strategy Pattern: Uses config for return animation
-   */
-  const handleGestureEnd = useCallback(() => {
-    // Animate back to center
-    Animated.spring(rotation, {
-      toValue: 0,
-      tension: config.returnSpeed,
-      friction: 12,
-      useNativeDriver: true,
-    }).start();
+      steeringAngle.value = newAngle;
+      cumulativeAngle.value = newAngle;
 
-    // Reset previous angle
-    previousAngle.current = 0;
+      // Threshold-based sending
+      if (Math.abs(newAngle - lastSentAngle.value) >= SEND_THRESHOLD_DEG) {
+        lastSentAngle.value = newAngle;
+        if (onSteeringChange) {
+          runOnJS(onSteeringChange)({
+            angle: newAngle,
+            normalizedValue: newAngle / MAX_ANGLE,
+            direction:
+              Math.abs(newAngle) < 5
+                ? "center"
+                : newAngle < 0
+                ? "left"
+                : "right",
+          });
+        }
+      }
+    })
+    .onEnd(() => {
+      "worklet";
+      steeringAngle.value = withSpring(0, {
+        damping: 15,
+        stiffness: 120,
+        mass: 1,
+      });
+      cumulativeAngle.value = 0;
+      lastSentAngle.value = 0;
+      if (onSteeringEnd) {
+        runOnJS(onSteeringEnd)();
+      }
+    });
 
-    // Notify parent
-    if (onSteeringChange) {
-      const centerData = createSteeringData(0);
-      onSteeringChange(centerData);
-    }
-    onSteeringEnd?.();
-  }, [rotation, config, onSteeringChange, onSteeringEnd, createSteeringData]);
+  // Use only pan gesture for now (simpler, more stable)
+  const combinedGesture = panGesture;
 
-  /**
-   * Interpolate rotation value to rotation string
-   * Presentation logic separated from business logic
-   */
-  const spin = rotation.interpolate({
-    inputRange: [-config.maxRotation, config.maxRotation],
-    outputRange: [`-${config.maxRotation}deg`, `${config.maxRotation}deg`],
-  });
+  // Animated rotation style
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${steeringAngle.value}deg` }],
+  }));
 
   return (
     <View style={styles.wrapper}>
-      <PanGestureHandler
-        onBegan={handleGestureStart}
-        onGestureEvent={handleGestureEvent}
-        onEnded={handleGestureEnd}
-        onCancelled={handleGestureEnd}
-      >
+      <GestureDetector gesture={combinedGesture}>
         <Animated.View
           style={[
             styles.wheel,
             {
               width: size,
               height: size,
-              transform: [{ rotate: spin }],
+              borderRadius: size / 2,
             },
+            animatedStyle,
           ]}
         >
-          {/* Steering Wheel SVG - Responsive to size prop */}
+          {/* Steering Wheel SVG */}
           <Svg width={size} height={size} viewBox="0 0 160 160" fill="none">
             {/* Outer rim - Orange */}
             <Circle cx="80" cy="80" r="79" fill="#FF880F" />
@@ -220,25 +224,22 @@ export default function SteeringWheel({
               fill="#FF880F"
             />
 
-            {/* Center cap - White (centered at 80, 80) */}
+            {/* Center cap */}
             <Circle cx="80" cy="80" r="8" fill="#fff" />
 
-            {/* Grip details on rim */}
+            {/* Grip details */}
             <Path
               d="M115.809 65.84v17.5l15.893-3.412v-12.5l-15.893-1.588zM148.191 65.428v17.5l-16.489-3v-12.5l16.489-2zM44.68 66v17l-15.948-3.066V67.436L44.68 66zM10.36 65.007v19l18.37-4.072v-12.5l-18.37-2.428zM81 114h6.25l-2 17H76l-2-17h7zM81 148h7.25l-3-17H76l-3 17h8z"
               fill="#FF880F"
             />
           </Svg>
         </Animated.View>
-      </PanGestureHandler>
+      </GestureDetector>
     </View>
   );
 }
 
-/**
- * Styles following separation of concerns
- * Keep styling logic separate from component logic
- */
+// Styles
 const styles = StyleSheet.create({
   wrapper: {
     alignItems: "center",
@@ -248,13 +249,8 @@ const styles = StyleSheet.create({
     borderRadius: 1000,
     alignItems: "center",
     justifyContent: "center",
-    // Transparent background - SVG handles its own colors
     backgroundColor: "transparent",
-    // Shadow for depth
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
+    boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.15)",
     elevation: 5,
   },
 });

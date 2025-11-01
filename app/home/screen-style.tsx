@@ -25,7 +25,6 @@ export default StyleSheet.create({
   title_container: {
     flexDirection: "row",
     padding: 20,
-    gap: 2, // small space between Beetle and bot
     borderWidth: 1,
     width: "60%",
   },
@@ -34,7 +33,7 @@ export default StyleSheet.create({
     flexDirection: "row",
     width: "40%",
     display: "flex",
-    justifyContent:  "center",
+    justifyContent: "center",
     alignItems: "center",
     margin: 0,
   },
@@ -135,3 +134,4 @@ export default StyleSheet.create({
     padding: 20,
   },
 });
+

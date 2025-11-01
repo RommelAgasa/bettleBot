@@ -116,12 +116,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     justifyContent: "center",
     alignItems: "center",
-    // Subtle shadow for iOS
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    // Elevation for Android shadow
+    boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)",
     elevation: 5,
   },
   circleBackground: {
