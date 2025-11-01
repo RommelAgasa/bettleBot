@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Animated, StyleSheet, View } from "react-native";
-import { State, TapGestureHandler } from "react-native-gesture-handler";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { runOnJS } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 
 export default function ClawButton() {
@@ -12,69 +13,66 @@ export default function ClawButton() {
   const opacityOpen = useRef(new Animated.Value(1)).current;
   const opacityClosed = useRef(new Animated.Value(0)).current;
 
-  const handleGestureEvent = (event: any) => {
-    const { state } = event.nativeEvent;
+  const handleTap = () => {
+    // Scale animation for press feedback
+    Animated.sequence([
+      Animated.spring(scaleAnim, {
+        toValue: 0.9,
+        useNativeDriver: true,
+        speed: 50,
+        bounciness: 5,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        speed: 30,
+        bounciness: 5,
+      }),
+    ]).start();
 
-    // Only handle on tap end
-    if (state === State.END) {
-      // Scale animation for press feedback
-      Animated.sequence([
-        Animated.spring(scaleAnim, {
-          toValue: 0.9,
+    // Toggle the claw state
+    const newState = !isClawClosed;
+    setIsClawClosed(newState);
+
+    // Animate to new state
+    if (newState) {
+      // Close claw
+      Animated.parallel([
+        Animated.timing(opacityOpen, {
+          toValue: 0,
+          duration: 150,
           useNativeDriver: true,
-          speed: 50,
-          bounciness: 5,
         }),
-        Animated.spring(scaleAnim, {
+        Animated.timing(opacityClosed, {
           toValue: 1,
+          duration: 150,
           useNativeDriver: true,
-          speed: 30,
-          bounciness: 5,
         }),
       ]).start();
-
-      // Toggle the claw state
-      const newState = !isClawClosed;
-      setIsClawClosed(newState);
-
-      // Animate to new state
-      if (newState) {
-        // Close claw
-        Animated.parallel([
-          Animated.timing(opacityOpen, {
-            toValue: 0,
-            duration: 150,
-            useNativeDriver: true,
-          }),
-          Animated.timing(opacityClosed, {
-            toValue: 1,
-            duration: 150,
-            useNativeDriver: true,
-          }),
-        ]).start();
-      } else {
-        // Open claw
-        Animated.parallel([
-          Animated.timing(opacityOpen, {
-            toValue: 1,
-            duration: 150,
-            useNativeDriver: true,
-          }),
-          Animated.timing(opacityClosed, {
-            toValue: 0,
-            duration: 150,
-            useNativeDriver: true,
-          }),
-        ]).start();
-      }
+    } else {
+      // Open claw
+      Animated.parallel([
+        Animated.timing(opacityOpen, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacityClosed, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]).start();
     }
   };
 
+  // Tap gesture for claw toggle
+  const clawGesture = Gesture.Tap().onStart(() => {
+    runOnJS(handleTap)();
+  });
+
   return (
-    <TapGestureHandler
-      onHandlerStateChange={handleGestureEvent}
-      shouldCancelWhenOutside={false}
-    >
+    <GestureDetector gesture={clawGesture}>
       <Animated.View style={styles.iconWrapper}>
         <Animated.View
           style={[styles.svgContainer, { transform: [{ scale: scaleAnim }] }]}
@@ -101,7 +99,7 @@ export default function ClawButton() {
           </Animated.View>
         </Animated.View>
       </Animated.View>
-    </TapGestureHandler>
+    </GestureDetector>
   );
 }
 

@@ -1,5 +1,7 @@
 import React, { useRef } from "react";
-import { Animated, Pressable, StyleSheet } from "react-native";
+import { Animated, StyleSheet } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { runOnJS } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 
 export default function AccelaratorButton() {
@@ -20,20 +22,28 @@ export default function AccelaratorButton() {
   };
 
   const handlePress = () => {
-    console.log("Pause button pressed!");
+    console.log("Accelerator button pressed!");
   };
 
+  // LongPress gesture for holdable accelerator
+  const accelerateGesture = Gesture.LongPress()
+    .minDuration(1) // respond immediately
+    .onStart(() => {
+      runOnJS(handlePressIn)();
+      runOnJS(handlePress)();
+    })
+    .onEnd(() => runOnJS(handlePressOut)())
+    .onFinalize(() => runOnJS(handlePressOut)());
+
   return (
-    <Pressable
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      onPress={handlePress}
-    >
-      <Animated.View style={[styles.wrapper, { transform: [{ scale: scaleAnim }] }]}>
+    <GestureDetector gesture={accelerateGesture}>
+      <Animated.View
+        style={[styles.wrapper, { transform: [{ scale: scaleAnim }] }]}
+      >
         {/* Shadow wrapper for SVG */}
-          <Svg width={100} height={140} viewBox="0 0 100 140">
-            <Path
-                d="M 30 0 
+        <Svg width={100} height={140} viewBox="0 0 100 140">
+          <Path
+            d="M 30 0 
                     L 70 0
                     Q 75 0 75 5
                     L 75 95
@@ -45,9 +55,9 @@ export default function AccelaratorButton() {
                     L 25 5
                     Q 25 0 30 0
                     Z"
-                fill="#e4e0e0ff"
-                />
-          </Svg>
+            fill="#e4e0e0ff"
+          />
+        </Svg>
 
         {/* Pause bars */}
         <Animated.View style={styles.pauseWrapper}>
@@ -55,7 +65,7 @@ export default function AccelaratorButton() {
           <Animated.View style={styles.pauseBar} />
         </Animated.View>
       </Animated.View>
-    </Pressable>
+    </GestureDetector>
   );
 }
 

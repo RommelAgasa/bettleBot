@@ -2,7 +2,7 @@ import CustomText from "@/src/theme/customText";
 import { View } from "react-native";
 import AccelaratorButton from "./components/acceleration";
 import Bluetooth from "./components/bluetooth";
-import BreakButton from "./components/break";
+import BrakeButton from "./components/brake";
 import ClawButton from "./components/claw";
 import GearSelector from "./components/gear";
 import Settings from "./components/settings";
@@ -83,7 +83,7 @@ export default function Home() {
             <SteeringWheel
               size={220}
               maxRotation={135}
-              sensitivity={0.4}
+              sensitivity={0.6}
               onSteeringChange={handleSteeringChange}
               onSteeringStart={handleSteeringStart}
               onSteeringEnd={handleSteeringEnd}
@@ -99,15 +99,7 @@ export default function Home() {
               </View>
               <View style={style.row2_right_accelaration_break_container}>
                 <View style={style.break}>
-                  <View
-                    style={{
-                      display: "flex",
-                      justifyContent: "flex-end",
-                      alignItems: "center",
-                    }}
-                  >
-                    <BreakButton />
-                  </View>
+                  <BrakeButton />
                 </View>
                 <View style={style.acceleration}>
                   <AccelaratorButton />
